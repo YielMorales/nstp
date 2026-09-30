@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NSTP 1 — Quiz Reviewer (Modules 1 & 2)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #1a2938;
+        --paper: #f4f1e8;
+        --cream: #faf8f2;
+        --sun: #ffd400;
+        --ochre: #8a6a00;
+        --red: #b0302a;
+        --green: #2f6b3a;
+        --soft: #e7e2d2;
+        --line: #d6cfbb;
+        --muted: #6b6558;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: var(--cream); color: var(--ink); font-family: "Lora", Georgia, serif; min-height: 100vh; }
+
+      .topbar { height: 5px; background: repeating-linear-gradient(90deg, var(--sun) 0 30px, var(--ink) 30px 34px); }
+
+      header { background: var(--ink); color: var(--paper); padding: 2.5rem 2rem 2rem; text-align: center; position: relative; overflow: hidden; }
+      header::before { content: "☀"; position: absolute; font-size: 16rem; opacity: 0.05; top: -4rem; left: -2rem; color: var(--sun); pointer-events: none; }
+      header h1 { font-family: "Playfair Display", Georgia, serif; font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 700; line-height: 1.1; margin-bottom: 0.4rem; }
+      header p { font-family: "DM Mono", monospace; font-size: 0.75rem; letter-spacing: 0.12em; color: var(--sun); text-transform: uppercase; margin-top: 0.5rem; }
+
+      .score-banner { background: var(--soft); border-bottom: 1px solid var(--line); padding: 0.7rem 2rem; display: flex; justify-content: center; gap: 2.5rem; flex-wrap: wrap; position: sticky; top: 0; z-index: 5; }
+      .score-banner .stat { font-family: "DM Mono", monospace; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: flex; gap: 0.5rem; align-items: center; }
+      .score-banner .stat strong { color: var(--ink); font-size: 1rem; }
+
+      nav { display: flex; background: var(--soft); border-bottom: 2px solid var(--ink); overflow-x: auto; scrollbar-width: none; }
+      nav::-webkit-scrollbar { display: none; }
+      nav button { font-family: "DM Mono", monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.85rem 1.2rem; border: none; background: transparent; color: var(--muted); cursor: pointer; border-right: 1px solid var(--line); white-space: nowrap; transition: all 0.2s; position: relative; }
+      nav button::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--sun); transform: scaleX(0); transition: transform 0.2s; }
+      nav button:hover { color: var(--ink); background: rgba(255, 212, 0, 0.12); }
+      nav button.active { color: var(--ink); font-weight: 500; }
+      nav button.active::after { transform: scaleX(1); }
+      nav button:focus-visible, .btn:focus-visible, .option-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+      main { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+      .section-title { font-family: "Playfair Display", serif; font-size: 1.6rem; margin-bottom: 0.3rem; }
+      .section-sub { font-family: "DM Mono", monospace; font-size: 0.72rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1.2rem; }
+      .note { background: var(--paper); border: 1px dashed var(--ochre); padding: 0.8rem 1.1rem; font-size: 0.85rem; line-height: 1.6; color: #3f3a30; margin-bottom: 1.5rem; }
+      .note strong { color: var(--ochre); }
+      .progress-bar { height: 4px; background: var(--soft); margin-bottom: 1.5rem; border-radius: 2px; overflow: hidden; }
+      .progress-fill { height: 100%; background: var(--ink); transition: width 0.4s ease; width: 0%; }
+
+      .ch-divider { font-family: "DM Mono", monospace; font-size: 0.68rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ochre); margin: 2.4rem 0 0.8rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--soft); }
+      .ch-divider.first { margin-top: 0; }
+
+      .q-card { background: white; border: 1px solid var(--line); border-radius: 2px; padding: 1.4rem 1.5rem; margin-bottom: 1.2rem; box-shadow: 2px 2px 0 var(--soft); }
+      .q-card.answered-ok { border-color: var(--green); background: #ebf4ea; box-shadow: 2px 2px 0 #c8e0c6; }
+      .q-card.answered-bad { border-color: var(--red); background: #fbecea; box-shadow: 2px 2px 0 #f0cbc6; }
+      .q-num { font-family: "DM Mono", monospace; font-size: 0.68rem; color: var(--ochre); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.6rem; display: flex; justify-content: space-between; gap: 1rem; }
+      .q-num .mark.ok { color: var(--green); font-weight: 500; }
+      .q-num .mark.bad { color: var(--red); font-weight: 500; }
+      .q-text { font-size: 0.95rem; line-height: 1.65; margin-bottom: 1rem; font-weight: 600; }
+      .options { display: flex; flex-direction: column; gap: 0.5rem; }
+      .option-btn { text-align: left; background: var(--cream); border: 1.5px solid var(--line); border-radius: 2px; padding: 0.6rem 1rem; font-family: "Lora", serif; font-size: 0.88rem; cursor: pointer; transition: all 0.15s; color: var(--ink); line-height: 1.5; }
+      .option-btn:hover:not(:disabled) { background: var(--soft); border-color: var(--ink); }
+      .option-btn.correct { background: #ebf4ea; border-color: var(--green); color: var(--green); font-weight: 600; }
+      .option-btn.wrong { background: #fbecea; border-color: var(--red); color: var(--red); }
+      .option-btn:disabled { cursor: default; }
+      .feedback { margin-top: 0.7rem; font-size: 0.85rem; font-style: italic; color: var(--muted); display: none; line-height: 1.6; }
+      .feedback.show { display: block; }
+
+      .btn { font-family: "DM Mono", monospace; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.6rem 1.4rem; border: 2px solid var(--ink); background: var(--ink); color: var(--paper); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+      .btn:hover { background: var(--sun); border-color: var(--sun); color: var(--ink); }
+      .btn.outline { background: transparent; color: var(--ink); }
+      .btn.outline:hover { background: var(--ink); color: var(--paper); }
+      .quiz-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; flex-wrap: wrap; gap: 1rem; }
+      .quiz-controls .btns { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+      .score-badge { font-family: "DM Mono", monospace; font-size: 0.85rem; color: var(--muted); }
+
+      .result-box { background: var(--paper); border: 1px solid var(--line); padding: 1.5rem 2rem; text-align: center; margin-top: 2rem; display: none; }
+      .result-box.show { display: block; }
+      .result-box .big { font-family: "Playfair Display", serif; font-size: 2.8rem; font-weight: 700; line-height: 1; margin-bottom: 0.4rem; }
+      .result-box .breakdown { font-family: "DM Mono", monospace; font-size: 0.75rem; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 0.8rem; }
+      .result-box .msg { font-size: 0.9rem; font-style: italic; color: var(--muted); margin-bottom: 1.2rem; }
+      .chapter-scores { font-family: "DM Mono", monospace; font-size: 0.72rem; color: var(--muted); line-height: 1.9; margin-bottom: 1.2rem; text-align: left; display: inline-block; }
+
+      .session-card { background: white; border: 1px solid var(--line); border-radius: 2px; margin-bottom: 1.5rem; box-shadow: 2px 2px 0 var(--soft); overflow: hidden; }
+      .session-header { background: var(--ink); color: var(--paper); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; gap: 1rem; }
+      .session-header h2 { font-family: "Playfair Display", serif; font-size: 1.05rem; font-weight: 700; }
+      .session-header .tag { font-family: "DM Mono", monospace; color: var(--sun); font-size: 1rem; }
+      .session-body { padding: 1.5rem; display: none; }
+      .session-body.open { display: block; }
+      .session-body h3 { font-family: "Playfair Display", serif; font-size: 1rem; color: var(--ink); margin: 1.2rem 0 0.5rem; border-left: 3px solid var(--sun); padding-left: 0.6rem; }
+      .session-body h3:first-child { margin-top: 0; }
+      .session-body p { font-size: 0.92rem; line-height: 1.75; color: #33302a; margin-bottom: 0.7rem; }
+      .session-body ul { padding-left: 1.3rem; margin-bottom: 0.7rem; }
+      .session-body ul li { font-size: 0.92rem; line-height: 1.7; color: #33302a; margin-bottom: 0.35rem; }
+      .quote-block { background: var(--paper); border-left: 4px solid var(--sun); padding: 1rem 1.2rem; margin: 1rem 0; font-style: italic; font-size: 0.9rem; line-height: 1.8; color: #3f3a30; }
+      .formula { background: var(--ink); color: var(--paper); font-family: "DM Mono", monospace; font-size: 0.85rem; padding: 0.9rem 1.1rem; margin: 0.9rem 0; border-left: 4px solid var(--sun); overflow-x: auto; }
+      @media (max-width: 600px) {
+        nav button { padding: 0.7rem 0.9rem; font-size: 0.65rem; }
+        .score-banner { gap: 1.2rem; padding: 0.6rem 1rem; }
+        .q-card { padding: 1.1rem 1.1rem; }
+      }
+      @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+    </style>
+  </head>
+  <body>
+    <div class="topbar"></div>
+    <header>
+      <h1>NSTP 1<br /><em>Quiz Reviewer</em></h1>
+      <p>Modules 1 &amp; 2 &nbsp;|&nbsp; Quiz on Oct. 1 &nbsp;|&nbsp; Asian Institute of Management</p>
+    </header>
+
+    <div class="score-banner" id="score-banner">
+      <div class="stat"><strong id="s-right">0</strong> Correct</div>
+      <div class="stat"><strong id="s-wrong">0</strong> Wrong</div>
+      <div class="stat"><strong id="s-done">0</strong> / <span id="s-total">0</span> Answered</div>
+    </div>
+
+    <nav id="nav"></nav>
+
+    <main>
+      <div id="notes-panel" style="display:none">
+        <div class="section-title">Notes</div>
+        <div class="section-sub">Modules 1 &amp; 2 | Tap a module to open it</div>
+
+        <div class="session-card">
+          <div class="session-header" onclick="toggleSession(this)"><h2>Module 1.1 — NSTP Law, Bill of Rights &amp; Good Citizenship</h2><span class="tag">＋</span></div>
+          <div class="session-body">
+            <h3>1987 Constitution: Bill of Rights</h3>
+            <p>The Bill of Rights is <strong>Article III</strong> of the 1987 Constitution. It has <strong>22 sections</strong> declaring the rights of every Filipino citizen.</p>
+            <ul>
+              <li><strong>Sec. 1:</strong> due process and equal protection of the laws.</li>
+              <li><strong>Sec. 2:</strong> no unreasonable searches and seizures; warrants only on probable cause determined personally by a judge.</li>
+              <li><strong>Sec. 3:</strong> privacy of communication; illegally obtained evidence is inadmissible.</li>
+              <li><strong>Sec. 4:</strong> freedom of speech, expression, the press, peaceful assembly and petition.</li>
+              <li><strong>Sec. 5:</strong> freedom of religion; no state religion; no religious test for civil or political rights.</li>
+              <li><strong>Sec. 6:</strong> liberty of abode and the right to travel.</li>
+              <li><strong>Sec. 7:</strong> right to information on matters of public concern.</li>
+              <li><strong>Sec. 8:</strong> right to form unions, associations or societies.</li>
+              <li><strong>Sec. 9:</strong> no taking of private property for public use without <strong>just compensation</strong>.</li>
+              <li><strong>Sec. 10:</strong> no law impairing the obligation of contracts.</li>
+              <li><strong>Sec. 11:</strong> free access to courts and legal assistance can't be denied because of poverty.</li>
+              <li><strong>Sec. 12:</strong> rights of a person under investigation: to remain silent and to have competent, independent counsel. These can only be waived <strong>in writing and in the presence of counsel</strong>. No torture or secret detention.</li>
+              <li><strong>Sec. 13:</strong> right to bail (except offenses punishable by reclusion perpetua when evidence of guilt is strong); no excessive bail.</li>
+              <li><strong>Sec. 14:</strong> due process in criminal cases; presumption of innocence; speedy, impartial, public trial.</li>
+              <li><strong>Sec. 15:</strong> the writ of habeas corpus can be suspended only for <strong>invasion or rebellion</strong> when public safety requires it.</li>
+              <li><strong>Sec. 16:</strong> speedy disposition of cases.</li>
+              <li><strong>Sec. 17:</strong> no one can be compelled to be a witness against himself (self-incrimination).</li>
+              <li><strong>Sec. 18:</strong> no detention solely for political beliefs; no involuntary servitude except as punishment for a crime.</li>
+              <li><strong>Sec. 19:</strong> no excessive fines or cruel, degrading, inhuman punishment; death penalty only if Congress provides for heinous crimes.</li>
+              <li><strong>Sec. 20:</strong> no imprisonment for <strong>debt or non-payment of a poll tax</strong>.</li>
+              <li><strong>Sec. 21:</strong> no double jeopardy; conviction or acquittal under a law or an ordinance bars prosecution under the other for the same act.</li>
+              <li><strong>Sec. 22:</strong> no ex post facto law or bill of attainder.</li>
+            </ul>
+            <h3>Suffrage</h3>
+            <p>Suffrage is <strong>not</strong> in the Bill of Rights; it has its own article. The slides label it Article IV (in the actual Constitution it is Article V). Requirements: a Filipino citizen not disqualified by law, <strong>at least 18</strong>, resided in the Philippines for <strong>at least 1 year</strong> and in the voting place for <strong>at least 6 months</strong> before the election. <strong>No literacy, property or other substantive requirement</strong> may be imposed.</p>
+            <h3>Rights and duties</h3>
+            <p>Our rights are not “for free.” Every right comes with corresponding duties and responsibilities. Teresita Baltazar: good governance is not enough, we must work on being good citizens by turning the values in the <strong>Preamble</strong> into concrete action.</p>
+            <h3>RA 9163: NSTP Act of 2001</h3>
+            <p><strong>Sec. 2, Declaration of Policy:</strong> the prime duty of government is to <strong>serve and protect its citizens</strong>. In turn, citizens are responsible for defending the security of the State, and the government may require personal, military or civil service.</p>
+            <p>The State recognizes the youth's vital role in nation-building and promotes civic consciousness, patriotism and nationalism. The youth, <strong>the most valuable resource of the nation</strong>, shall be motivated, trained, organized and mobilized in military training, literacy, civic welfare and similar endeavors.</p>
+            <h3>NSTP components</h3>
+            <ul>
+              <li><strong>ROTC:</strong> Reserve Officers' Training Corps</li>
+              <li><strong>LTS:</strong> Literacy Training Service</li>
+              <li><strong>CWTS:</strong> Civic Welfare Training Service</li>
+            </ul>
+            <h3>Good Citizenship Values (CHED MO No. 26)</h3>
+            <ul>
+              <li><strong>Pagkamaka-Diyos:</strong> faith in the Almighty, respect for life, order, work, concern for family and future generations.</li>
+              <li><strong>Pagkamaka-tao:</strong> love, freedom, peace, truth, justice.</li>
+              <li><strong>Pagkamaka-bayan:</strong> unity, equality, respect for law and government, patriotism, promotion of the common good.</li>
+              <li><strong>Pagkamaka-kalikasan:</strong> concern for the environment.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="session-card">
+          <div class="session-header" onclick="toggleSession(this)"><h2>Module 1.2 — Human Rights: A Global Perspective</h2><span class="tag">＋</span></div>
+          <div class="session-body">
+            <h3>Before the UDHR</h3>
+            <p>Human rights were not new. Some recognition of human dignity already existed in different cultures and religions, and in some states such as the <strong>USA, Great Britain and France</strong>.</p>
+            <h3>Universal Declaration of Human Rights</h3>
+            <ul>
+              <li>Proclaimed by the <strong>UN General Assembly in Paris</strong> on <strong>December 10, 1948</strong>.</li>
+              <li>A “standard of achievement for all peoples and all nations.”</li>
+              <li><strong>Permanent but non-binding.</strong></li>
+              <li>Global and regional application; covers all facets of a dignified life.</li>
+              <li>Inclusive, notably of <strong>women's rights</strong>; women helped shape the declaration.</li>
+            </ul>
+            <h3>Mechanisms and instruments</h3>
+            <ul>
+              <li><strong>Treaty-based mechanisms:</strong> independent committees.</li>
+              <li><strong>Charter-based mechanisms:</strong> the Human Rights Council.</li>
+              <li><strong>Instruments:</strong> legal frameworks for upholding human rights (listed on the OHCHR website).</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="session-card">
+          <div class="session-header" onclick="toggleSession(this)"><h2>Module 2.1 — Development, Human Rights &amp; Sustainable Development</h2><span class="tag">＋</span></div>
+          <div class="session-body">
+            <h3>Traditional view of development</h3>
+            <ul>
+              <li>Economic growth leads to social progress.</li>
+              <li>Western models are universally applicable.</li>
+              <li>Culture and tradition are obstacles to development.</li>
+              <li>Nature exists primarily as a resource to be exploited.</li>
+            </ul>
+            <h3>Contemporary view</h3>
+            <ul>
+              <li><strong>Amartya Sen:</strong> freedom to become what we value.</li>
+              <li><strong>Alain de Janvry &amp; Elizabeth Sadoulet:</strong> enhancement of well-being.</li>
+            </ul>
+            <h3>Human rights and development</h3>
+            <p>Not new concepts. Global events and trends legitimized them through <strong>international laws and treaties</strong>. They are <strong>interwoven</strong> concepts.</p>
+            <h3>Sustainable development</h3>
+            <p>More than a buzzword, it is both <strong>analytical</strong> (understanding pressing complex issues) and <strong>normative</strong> (moral and ethical guidelines).</p>
+            <h3>Timeline</h3>
+            <ul>
+              <li><strong>1972 Limits to Growth:</strong> commissioned by the Club of Rome; UN Conference on the Human Environment in <strong>Stockholm</strong>.</li>
+              <li><strong>1987 Brundtland Report (Our Common Future):</strong> development that meets the needs of the present without compromising the needs of future generations.</li>
+              <li><strong>1992 UN Conference on Environment and Development:</strong> the <strong>Rio Earth Summit</strong>; Multilateral Environmental Agreements.</li>
+              <li><strong>1997 Kyoto Protocol:</strong> turned UNFCCC principles into concrete emissions targets (<strong>5% below 1990 levels</strong>).</li>
+              <li><strong>2000 Millennium Development Goals:</strong> integrated the <strong>3 pillars</strong> (economic, social, environmental) as mutually reinforcing.</li>
+              <li><strong>2012 UN Conference on Sustainable Development:</strong> a universal set of goals for urgent environmental, political and economic challenges.</li>
+              <li><strong>2015 SDGs:</strong> 17 goals, adopted August 2015 per the slides (formally adopted by the UN General Assembly in September 2015).</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="session-card">
+          <div class="session-header" onclick="toggleSession(this)"><h2>Module 2.2 — SDGs 1, 3 &amp; 16 · Issue Focus: Drug Abuse</h2><span class="tag">＋</span></div>
+          <div class="session-body">
+            <h3>SDG 1: No Poverty</h3>
+            <p>End poverty in all its forms everywhere. Target 1.1 originally used $1.25/day; the International Poverty Line is now <strong>US$3.00/day</strong>.</p>
+            <p><strong>Agents:</strong> DSWD (<strong>4Ps</strong>), DepDev, DepEd; NGOs like International Care Ministries, Gawad Kalinga, Bantu PH, CARD-MRI, CODE-NGO, Uplift Microfinance, AJ Kalinga, SNPP.</p>
+            <h3>SDG 3: Good Health and Well-being</h3>
+            <p>Ensure healthy lives and promote well-being for all at all ages. Key target for this module: <strong>3.5</strong>, strengthen prevention and treatment of substance abuse. Others: 3.4 mental health, 3.6 halve road deaths, 3.8 universal health coverage.</p>
+            <p><strong>Agents:</strong> DOH (PhilHealth, local health centers), DSWD; NGOs like Roots of Health PH, FHI 360, Child Hope Philippines.</p>
+            <h3>SDG 16: Peace, Justice and Strong Institutions</h3>
+            <p>Peaceful, inclusive societies, access to justice, and effective, accountable institutions. Examples: 16.5 reduce corruption and bribery, <strong>16.9 legal identity and birth registration</strong>, 16.10 public access to information.</p>
+            <p><strong>Agents:</strong> DOJ, PNP, AFP, NTF-ELCAC, anti-drug abuse offices, COA, CHR; NGOs like Active Vista, Mindanao Peacebuilding Institute, <strong>FLAG</strong>, CyberGuardians PH.</p>
+            <h3>Issue focus: drug abuse</h3>
+            <p><strong>Drug use disorder</strong> (WHO) covers two health conditions: a <strong>harmful pattern of drug use</strong> and <strong>drug dependence</strong>. It has psychosocial, environmental and biological determinants. Scientifically it is a <strong>treatable health condition</strong>, not so much a self-acquired bad habit.</p>
+            <p><strong>Film:</strong> <em>Walang Hanggang Gabi</em> (ABS-CBN) on the war on drugs.</p>
+            <p><strong>CADAO</strong> (Caloocan Anti-Drug Abuse Office) runs <strong>CARROTS</strong>: Community Assisted Recovery and Rehabilitation Training Services. It came from Bishop Ambo David's call to respect the dignity of life, and is an agreement among the <strong>Church, the State (Caloocan LGU), and private individuals and firms</strong>.</p>
+          </div>
+        </div>
+
+        <div class="session-card">
+          <div class="session-header" onclick="toggleSession(this)"><h2>Module 2.3 — SDGs 4, 5 &amp; 10 · Issue Focus: Education</h2><span class="tag">＋</span></div>
+          <div class="session-body">
+            <h3>Poverty in the Philippines (2023)</h3>
+            <p>Highest poverty incidence: <strong>1) Region IX – Zamboanga Peninsula</strong>, 2) BARMM, 3) Negros Island Region.</p>
+            <h3>SDG 4: Quality Education</h3>
+            <p>Inclusive, equitable quality education and lifelong learning for all. Targets include free primary and secondary education (4.1), early childhood care (4.2), literacy and numeracy (4.6), and more qualified teachers (4.c).</p>
+            <p><strong>Agents:</strong> DepEd, CHED, TESDA, DSWD, <strong>EDCOM 2</strong> (Second Congressional Commission on Education); NGOs like ERDA, Teach For the Philippines, Save the Children, AHA Learning Center, Project Pearls.</p>
+            <h3>SDG 5: Gender Equality</h3>
+            <p>Achieve gender equality and empower all women and girls. Key: 5.2 eliminate violence against women and girls, <strong>5.4 recognize and value unpaid care and domestic work</strong>, 5.5 women's leadership.</p>
+            <p><strong>Agents:</strong> DepDev, LGUs, <strong>Philippine Commission on Women</strong>, CHR; NGOs like Center for Women's Resources, For The Women Foundation.</p>
+            <h3>SDG 10: Reduced Inequalities</h3>
+            <p>Reduce inequality within and among countries. <strong>10.1:</strong> income growth of the <strong>bottom 40%</strong> faster than the national average. <strong>10.7:</strong> safe, orderly migration. <strong>10.c:</strong> remittance costs <strong>below 3%</strong>, eliminate corridors above 5%.</p>
+            <p><strong>Agents:</strong> DSWD, DFA, DMW, BSP; NGOs like GALANG PH, COSE, Tahanang Walang Hagdanan.</p>
+            <h3>Issue focus: education crisis</h3>
+            <p>Speaker <strong>Ms. Pauline Rampola</strong> (Ateneo Office for Social Concern and Involvement) on the national situation of education and inequality and the results of EDCOM 2.</p>
+          </div>
+        </div>
+
+        <div class="session-card">
+          <div class="session-header" onclick="toggleSession(this)"><h2>Module 2.4 — DRRM · SDGs 2, 12 &amp; 13</h2><span class="tag">＋</span></div>
+          <div class="session-body">
+            <h3>There is no such thing as a natural disaster</h3>
+            <ul>
+              <li><strong>Hazard:</strong> a process, phenomenon or human activity that can cause damage.</li>
+              <li><strong>Vulnerability:</strong> characteristics that increase susceptibility to the impact of hazards.</li>
+              <li><strong>Exposure:</strong> people, infrastructure and assets located in hazard-prone areas.</li>
+            </ul>
+            <div class="formula">Hazards + Vulnerability + Exposure = Disaster Risk</div>
+            <p><strong>Disaster risk:</strong> the likelihood of loss of life, injury, or destruction and damage from a disaster in a given period.</p>
+            <h3>Risk drivers</h3>
+            <p>Climate change, environmental degradation, globalized economic development, poverty and inequality, poorly planned urban development, weak governance.</p>
+            <h3>Cause and effect</h3>
+            <p>Human actions (unsustainable consumption, negligence) worsen disaster risk. Disasters affect everyone but hit the <strong>most vulnerable</strong> hardest: food security, accessibility, shelter, further environmental damage.</p>
+            <h3>Sendai Framework for DRR: 4 priorities</h3>
+            <ul>
+              <li>Understanding disaster risk</li>
+              <li>Strengthening disaster risk governance</li>
+              <li>Investing in DRR</li>
+              <li>Enhancing preparedness for effective response</li>
+            </ul>
+            <p>The <strong>State has the primary role</strong>, but responsibility is shared with the private sector, communities and individuals.</p>
+            <h3>SDG 2: Zero Hunger</h3>
+            <p>End hunger, food security, nutrition, sustainable agriculture. <strong>2.3:</strong> double the productivity and incomes of small-scale food producers. 2.4: resilient agriculture.</p>
+            <h3>SDG 12: Responsible Consumption and Production</h3>
+            <p><strong>12.3:</strong> halve per capita food waste at retail and consumer levels. 12.5: reduce waste through prevention, recycling and reuse. 12.c: rationalize wasteful fossil-fuel subsidies.</p>
+            <h3>SDG 13: Climate Action</h3>
+            <p>13.1: resilience to climate hazards. 13.2: climate measures in national planning. <strong>13.a:</strong> developed countries to mobilize <strong>$100 billion yearly by 2020</strong>; operationalize the Green Climate Fund.</p>
+          </div>
+        </div>
+
+        <div class="session-card">
+          <div class="session-header" onclick="toggleSession(this)"><h2>Module 2.5 — SDGs 7 &amp; 11</h2><span class="tag">＋</span></div>
+          <div class="session-body">
+            <h3>SDG 7: Affordable and Clean Energy</h3>
+            <p>Ensure access to <strong>affordable, reliable, sustainable and modern</strong> energy for all.</p>
+            <ul>
+              <li><strong>7.1:</strong> universal access to modern energy services.</li>
+              <li><strong>7.2:</strong> increase the share of renewable energy.</li>
+              <li><strong>7.3:</strong> double the global rate of improvement in energy efficiency.</li>
+            </ul>
+            <h3>SDG 11: Sustainable Cities and Communities</h3>
+            <p>Make cities and human settlements <strong>inclusive, safe, resilient and sustainable</strong>.</p>
+            <ul>
+              <li><strong>11.1:</strong> adequate, safe, affordable housing; upgrade slums.</li>
+              <li><strong>11.2:</strong> safe, accessible public transport.</li>
+              <li><strong>11.4:</strong> protect cultural and natural heritage.</li>
+              <li><strong>11.5:</strong> reduce deaths and losses from disasters.</li>
+              <li><strong>11.6:</strong> air quality and municipal waste management.</li>
+              <li><strong>11.7:</strong> safe, inclusive green and public spaces.</li>
+              <li><strong>11.b:</strong> holistic disaster risk management in line with the <strong>Sendai Framework 2015–2030</strong>.</li>
+            </ul>
+            <p><strong>Activity:</strong> design a sustainable city/community that would have reduced the effects of your group's assigned disaster.</p>
+          </div>
+        </div>
+
+        <div class="session-card">
+          <div class="session-header" onclick="toggleSession(this)"><h2>Module 2.6 — SDGs 6, 14 &amp; 15 · Issue Focus: Ahunan Dam</h2><span class="tag">＋</span></div>
+          <div class="session-body">
+            <h3>Issue focus: Ahunan Dam, Pakil, Laguna</h3>
+            <p>Speaker <strong>Mr. Danilo Francisco</strong>, lay volunteer of the Commission on Ecology (Diocese of San Pablo) and chair of the Committee on Justice, Peace, and Integral Ecology of the Laguna Ecumenical Movement. Theme: environment and alternative energy sources, and the <strong>trade-offs between renewable energy and environmental conservation</strong>.</p>
+            <h3>The environment in the SDGs</h3>
+            <p><strong>SDG 6</strong> Clean Water and Sanitation, <strong>SDG 14</strong> Life Below Water, <strong>SDG 15</strong> Life on Land.</p>
+            <h3>SDG 6</h3>
+            <p>6.1 safe, affordable drinking water; <strong>6.2 sanitation and ending open defecation</strong>, with attention to women and girls; 6.3 water quality; 6.b local community participation.</p>
+            <h3>SDG 14</h3>
+            <p>14.1 reduce marine pollution; 14.4 end overfishing; <strong>14.5 conserve at least 10%</strong> of coastal and marine areas; <strong>14.b access for small-scale artisanal fishers</strong>.</p>
+            <h3>SDG 15</h3>
+            <p>Protect terrestrial ecosystems, manage forests, combat desertification, halt biodiversity loss. <strong>15.5:</strong> IFAW reports <strong>21 animals</strong> recently went extinct. <strong>15.9:</strong> included in the outcomes of the <strong>Philippine Development Plan</strong>. <strong>15.a:</strong> mobilize financial resources.</p>
+            <div class="quote-block">DENR (Manila Bulletin, March 2024): the Philippines needs ₱25 billion a year for biodiversity conservation, but the 2024 budget was only ₱4.2 billion.</div>
+          </div>
+        </div>
+
+        <div class="session-card">
+          <div class="session-header" onclick="toggleSession(this)"><h2>Module 2.7 — Agents, SDGs 8, 9 &amp; 17 · Security</h2><span class="tag">＋</span></div>
+          <div class="session-body">
+            <h3>Agents for environmental protection</h3>
+            <p><strong>Government:</strong> LGUs, DENR, BFAR, Climate Change Commission. <strong>CSOs/NGOs:</strong> PMPI, Center for Environmental Concerns, Greenpeace, <strong>Haribon Foundation</strong>.</p>
+            <h3>SDG 8: Decent Work and Economic Growth</h3>
+            <p>Sustained, inclusive growth and decent work. Highlights: growth through innovation and diversification, <strong>labor rights and ending forced and child labor</strong>, sustainable tourism, aid for trade.</p>
+            <h3>SDG 9: Industry, Innovation and Infrastructure</h3>
+            <p>Build resilient infrastructure, promote inclusive and sustainable industrialization, foster innovation. Highlights: inclusive infrastructure, “clean” technologies, access to information.</p>
+            <h3>SDG 17: Partnerships for the Goals</h3>
+            <p>Strengthen means of implementation and revitalize the Global Partnership. Highlights: resource mobilization for developing countries, technology and trade cooperation, <strong>public-private partnerships</strong>.</p>
+            <h3>Security</h3>
+            <p>Two definitions: <strong>national/physical security</strong> and <strong>human security</strong>.</p>
+            <p><strong>National security examples:</strong> Marawi before and after the siege; the Chinese water cannon attack on Filipino fishermen; escalating cyber threats linked to West Philippine Sea tensions (AFP Cyber Command).</p>
+            <p><strong>Threats to human security</strong> come as <strong>shocks, trends and seasonalities</strong>, across six spheres: political, economic, social, environmental, technological, health.</p>
+            <h3>Film: Poverty Inc.</h3>
+            <p>Discussion question: can international aid also become a threat to national and human security?</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="quiz-panel">
+      <div class="section-title" id="view-title">All Modules</div>
+      <div class="section-sub" id="view-sub"></div>
+      <div class="note">
+        <strong>Scoring:</strong> 1 point per correct answer. Wrong answers don't deduct anything, so answer every item.
+        30 items covering Modules 1.1 to 2.7. Use the module tabs to drill one part at a time.
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="ex-prog"></div></div>
+      <div id="ex-wrap"></div>
+      <div class="quiz-controls">
+        <div class="score-badge">Score: <span id="ex-score-txt">0 / 0</span></div>
+        <div class="btns">
+          <button class="btn outline" onclick="retryMissed()">Retry missed items</button>
+          <button class="btn outline" onclick="resetExam()">↺ Reset all</button>
+        </div>
+      </div>
+      <div class="result-box" id="ex-result">
+        <div class="big" id="ex-big"></div>
+        <div class="breakdown" id="ex-breakdown"></div>
+        <div class="chapter-scores" id="ex-chapters"></div>
+        <div class="msg" id="ex-msg"></div>
+        <button class="btn" onclick="retryMissed()">Retry missed items</button>
+      </div>
+      </div>
+    </main>
+
+    <script>
+const Q = [
+ {
+  "ch": "Module 1.1 — NSTP Law, Bill of Rights & Good Citizenship",
+  "q": "Which statement about suffrage (the right to vote) is correct?",
+  "o": [
+   "It is found in a separate article of the Constitution, not in the Bill of Rights",
+   "It is Section 4 of the Bill of Rights",
+   "It is only granted by statute, not by the Constitution",
+   "It is part of the Preamble"
+  ],
+  "a": 0,
+  "fb": "Suffrage is NOT part of the Bill of Rights; it has its own article. (The slides label it Article IV, but in the actual 1987 Constitution suffrage is Article V; Article IV is Citizenship.)"
+ },
+ {
+  "ch": "Module 1.1 — NSTP Law, Bill of Rights & Good Citizenship",
+  "q": "Which of the following is NOT a requirement for exercising suffrage?",
+  "o": [
+   "Being able to read and write",
+   "Residing in the Philippines for at least one year",
+   "Residing in the place where you will vote for at least six months before the election",
+   "Being at least 18 years old"
+  ],
+  "a": 0,
+  "fb": "The Constitution expressly says no literacy, property, or other substantive requirement shall be imposed on suffrage."
+ },
+ {
+  "ch": "Module 1.1 — NSTP Law, Bill of Rights & Good Citizenship",
+  "q": "What is the legal basis of the National Service Training Program?",
+  "o": [
+   "CHED Memorandum Order No. 26",
+   "Republic Act 7077",
+   "Republic Act 9163",
+   "Presidential Decree 1706"
+  ],
+  "a": 2,
+  "fb": "RA 9163 is the National Service Training Program Act of 2001. CHED MO No. 26 is where the good citizenship values come in."
+ },
+ {
+  "ch": "Module 1.1 — NSTP Law, Bill of Rights & Good Citizenship",
+  "q": "Which of the following is NOT one of the three NSTP components?",
+  "o": [
+   "Disaster Response Training Service (DRTS)",
+   "Reserve Officers' Training Corps (ROTC)",
+   "Literacy Training Service (LTS)",
+   "Civic Welfare Training Service (CWTS)"
+  ],
+  "a": 0,
+  "fb": "The three components are ROTC, LTS, and CWTS."
+ },
+ {
+  "ch": "Module 1.1 — NSTP Law, Bill of Rights & Good Citizenship",
+  "q": "Which of the following is NOT one of the four main good citizenship values under CHED MO No. 26?",
+  "o": [
+   "Pagkamaka-Diyos",
+   "Pagkamaka-tao",
+   "Pagkamaka-pamilya",
+   "Pagkamaka-kalikasan"
+  ],
+  "a": 2,
+  "fb": "The four are Pagkamaka-Diyos, Pagkamaka-tao, Pagkamaka-bayan, and Pagkamaka-kalikasan."
+ },
+ {
+  "ch": "Module 1.1 — NSTP Law, Bill of Rights & Good Citizenship",
+  "q": "Unity, equality, respect for law and government, patriotism, and promotion of the common good fall under which value?",
+  "o": [
+   "Pagkamaka-bayan",
+   "Pagkamaka-tao",
+   "Pagkamaka-Diyos",
+   "Pagkamaka-kalikasan"
+  ],
+  "a": 0,
+  "fb": "These are the sub-values of Pagkamaka-bayan (love of country)."
+ },
+ {
+  "ch": "Module 1.2 — Human Rights: A Global Perspective",
+  "q": "When and where was the Universal Declaration of Human Rights proclaimed?",
+  "o": [
+   "December 10, 1948 in Paris",
+   "October 24, 1945 in San Francisco",
+   "December 10, 1948 in Geneva",
+   "June 26, 1945 in New York"
+  ],
+  "a": 0,
+  "fb": "The UN General Assembly proclaimed the UDHR in Paris on December 10, 1948."
+ },
+ {
+  "ch": "Module 1.2 — Human Rights: A Global Perspective",
+  "q": "How does the module describe the legal nature of the UDHR?",
+  "o": [
+   "Binding treaty enforceable in all courts",
+   "Temporary and non-binding",
+   "Permanent but non-binding",
+   "Binding only on UN Security Council members"
+  ],
+  "a": 2,
+  "fb": "The UDHR is described as permanent but non-binding, a “standard of achievement for all peoples and all nations.”"
+ },
+ {
+  "ch": "Module 1.2 — Human Rights: A Global Perspective",
+  "q": "Charter-based human rights mechanisms are carried out through:",
+  "o": [
+   "The Human Rights Council",
+   "The International Court of Justice",
+   "The UN Security Council",
+   "Independent treaty committees"
+  ],
+  "a": 0,
+  "fb": "Treaty-based mechanisms use independent committees; charter-based mechanisms use the Human Rights Council."
+ },
+ {
+  "ch": "Module 2.1 — Development, Human Rights & Sustainable Development",
+  "q": "Which of the following is NOT a key assumption of the traditional view of development?",
+  "o": [
+   "Economic growth leads to social progress",
+   "Western models are universally applicable",
+   "Development is the freedom to become what we value",
+   "Nature exists primarily as a resource to be exploited"
+  ],
+  "a": 2,
+  "fb": "“Freedom to become what we value” is Amartya Sen's contemporary view. Traditional development also treats culture and tradition as obstacles."
+ },
+ {
+  "ch": "Module 2.1 — Development, Human Rights & Sustainable Development",
+  "q": "Amartya Sen describes development as:",
+  "o": [
+   "The freedom to become what we value",
+   "The enhancement of well-being",
+   "Sustained growth in GDP per capita",
+   "Industrialization following Western models"
+  ],
+  "a": 0,
+  "fb": "Sen: development as freedom. De Janvry and Sadoulet: development as enhancement of well-being."
+ },
+ {
+  "ch": "Module 2.1 — Development, Human Rights & Sustainable Development",
+  "q": "Which document defined sustainable development as development that meets the needs of the present without compromising the needs of future generations?",
+  "o": [
+   "Limits to Growth (1972)",
+   "Kyoto Protocol (1997)",
+   "Millennium Declaration (2000)",
+   "Brundtland Report, “Our Common Future” (1987)"
+  ],
+  "a": 3,
+  "fb": "The 1987 Brundtland Report (Our Common Future) gave this classic definition."
+ },
+ {
+  "ch": "Module 2.1 — Development, Human Rights & Sustainable Development",
+  "q": "What are the three pillars of sustainable development integrated as mutually reinforcing under the 2000 MDGs?",
+  "o": [
+   "Political, Social, Cultural",
+   "Economic, Political, Technological",
+   "Social, Cultural, Environmental",
+   "Economic, Social, Environmental"
+  ],
+  "a": 3,
+  "fb": "The 3 pillars are Economic, Social, and Environmental."
+ },
+ {
+  "ch": "Module 2.2 — SDGs 1, 3 & 16 · Issue Focus: Drug Abuse",
+  "q": "Target 1.1 originally measured extreme poverty as living on less than $1.25 a day. What is the International Poverty Line now, per the module?",
+  "o": [
+   "US$1.90/day",
+   "US$3.00/day",
+   "US$2.15/day",
+   "US$5.00/day"
+  ],
+  "a": 1,
+  "fb": "The slide notes the International Poverty Line is now US$3.00 per day."
+ },
+ {
+  "ch": "Module 2.2 — SDGs 1, 3 & 16 · Issue Focus: Drug Abuse",
+  "q": "Drug use disorder, per the WHO, includes which two health conditions?",
+  "o": [
+   "Addiction and relapse",
+   "Harmful pattern of drug use and drug dependence",
+   "Withdrawal and overdose",
+   "Psychosis and depression"
+  ],
+  "a": 1,
+  "fb": "Drug use disorder covers a harmful pattern of drug use and drug dependence. It has psychosocial, environmental, and biological determinants."
+ },
+ {
+  "ch": "Module 2.2 — SDGs 1, 3 & 16 · Issue Focus: Drug Abuse",
+  "q": "What does CARROTS stand for in CADAO's program?",
+  "o": [
+   "Community Assisted Recovery and Rehabilitation Training Services",
+   "Caloocan Anti-drug Recovery and Reform Of Treatment Services",
+   "Center for Addiction Recovery, Rehabilitation and Outreach Training",
+   "Community Action for Rehabilitation, Recovery and Outreach Support"
+  ],
+  "a": 0,
+  "fb": "CARROTS = Community Assisted Recovery and Rehabilitation Training Services, run by the Caloocan Anti-Drug Abuse Office (CADAO)."
+ },
+ {
+  "ch": "Module 2.3 — SDGs 4, 5 & 10 · Issue Focus: Education",
+  "q": "Which region had the highest poverty incidence in the Philippines in 2023, per the module?",
+  "o": [
+   "BARMM",
+   "Negros Island Region",
+   "Region IX – Zamboanga Peninsula",
+   "Region V – Bicol"
+  ],
+  "a": 2,
+  "fb": "Top three: 1) Region IX – Zamboanga Peninsula, 2) BARMM, 3) Negros Island Region."
+ },
+ {
+  "ch": "Module 2.3 — SDGs 4, 5 & 10 · Issue Focus: Education",
+  "q": "“Recognize and value unpaid care and domestic work” is a target under:",
+  "o": [
+   "SDG 8: Decent Work",
+   "SDG 10: Reduced Inequalities",
+   "SDG 1: No Poverty",
+   "SDG 5: Gender Equality"
+  ],
+  "a": 3,
+  "fb": "This is Target 5.4 under Gender Equality."
+ },
+ {
+  "ch": "Module 2.4 — DRRM · SDGs 2, 12 & 13",
+  "q": "The module says there is no such thing as a NATURAL disaster. Which formula captures disaster risk?",
+  "o": [
+   "Hazard × Population = Disaster",
+   "Hazard + Vulnerability + Exposure = Disaster Risk",
+   "Climate Change + Poverty = Disaster",
+   "Exposure − Capacity = Disaster Risk"
+  ],
+  "a": 1,
+  "fb": "The interaction of hazards, vulnerability, and exposure produces disaster risk."
+ },
+ {
+  "ch": "Module 2.4 — DRRM · SDGs 2, 12 & 13",
+  "q": "“Characteristics that increase the susceptibility of individuals, families, and communities to the impact of hazards” defines:",
+  "o": [
+   "Hazard",
+   "Exposure",
+   "Vulnerability",
+   "Disaster risk"
+  ],
+  "a": 2,
+  "fb": "That is vulnerability. Exposure is being located in hazard-prone areas; a hazard is the process or phenomenon that can cause damage."
+ },
+ {
+  "ch": "Module 2.4 — DRRM · SDGs 2, 12 & 13",
+  "q": "Which is NOT one of the four priority actions of the Sendai Framework for DRR?",
+  "o": [
+   "Understanding disaster risk",
+   "Relocating all populations away from hazard zones",
+   "Investing in DRR",
+   "Enhancing disaster preparedness for effective response"
+  ],
+  "a": 1,
+  "fb": "The four priorities: understanding disaster risk, strengthening disaster risk governance, investing in DRR, and enhancing preparedness for effective response."
+ },
+ {
+  "ch": "Module 2.4 — DRRM · SDGs 2, 12 & 13",
+  "q": "Target 12.3 aims to do what by 2030?",
+  "o": [
+   "Ban single-use plastics globally",
+   "Halve per capita global food waste at the retail and consumer levels",
+   "Double renewable energy share",
+   "End fossil-fuel subsidies entirely"
+  ],
+  "a": 1,
+  "fb": "Target 12.3: halve per capita food waste and reduce food losses along production and supply chains."
+ },
+ {
+  "ch": "Module 2.5 — SDGs 7 & 11",
+  "q": "Goal 7 aims to ensure access to energy that is:",
+  "o": [
+   "Free, local, and renewable",
+   "Cheap, abundant, and nuclear",
+   "Clean, green, and imported",
+   "Affordable, reliable, sustainable, and modern"
+  ],
+  "a": 3,
+  "fb": "Goal 7: Ensure access to affordable, reliable, sustainable and modern energy for all."
+ },
+ {
+  "ch": "Module 2.5 — SDGs 7 & 11",
+  "q": "Target 11.b calls for holistic disaster risk management in line with which framework?",
+  "o": [
+   "Paris Agreement",
+   "Kyoto Protocol",
+   "Sendai Framework for Disaster Risk Reduction 2015–2030",
+   "Hyogo Framework for Action"
+  ],
+  "a": 2,
+  "fb": "Target 11.b links sustainable cities to the Sendai Framework 2015–2030."
+ },
+ {
+  "ch": "Module 2.6 — SDGs 6, 14 & 15 · Issue Focus: Ahunan Dam",
+  "q": "The Ahunan Dam issue in Pakil, Laguna was used to illustrate what tension?",
+  "o": [
+   "Urbanization versus rural development",
+   "Trade-offs between renewable energy and environmental conservation",
+   "Foreign aid versus local businesses",
+   "National security versus human security"
+  ],
+  "a": 1,
+  "fb": "The issue focus was environment and alternative energy sources, leading to the reflection on trade-offs between renewable energy and conservation."
+ },
+ {
+  "ch": "Module 2.6 — SDGs 6, 14 & 15 · Issue Focus: Ahunan Dam",
+  "q": "Which SDGs were grouped as “the Environment in the SDGs” in Module 2.6?",
+  "o": [
+   "SDGs 2, 12, 13",
+   "SDGs 7, 11",
+   "SDGs 8, 9, 17",
+   "SDGs 6, 14, 15"
+  ],
+  "a": 3,
+  "fb": "SDG 6 Clean Water and Sanitation, SDG 14 Life Below Water, SDG 15 Life on Land."
+ },
+ {
+  "ch": "Module 2.6 — SDGs 6, 14 & 15 · Issue Focus: Ahunan Dam",
+  "q": "According to DENR (Manila Bulletin, 2024), how much does the Philippines need annually for biodiversity conservation, versus its 2024 budget?",
+  "o": [
+   "₱4.2 billion needed vs ₱25 billion budget",
+   "₱10 billion needed vs ₱2 billion budget",
+   "₱25 billion needed vs ₱14 billion budget",
+   "₱25 billion needed vs ₱4.2 billion budget"
+  ],
+  "a": 3,
+  "fb": "DENR says ₱25 billion is needed annually, but the 2024 biodiversity budget was only ₱4.2 billion. This connects to Target 15.a on mobilizing financial resources."
+ },
+ {
+  "ch": "Module 2.7 — Agents, SDGs 8, 9 & 17 · Security",
+  "q": "Which of the following is a civil society organization/NGO, NOT a government agency, working for environmental protection?",
+  "o": [
+   "Bureau of Fisheries and Aquatic Resources",
+   "Climate Change Commission",
+   "Haribon Foundation",
+   "DENR"
+  ],
+  "a": 2,
+  "fb": "Government: LGUs, DENR, BFAR, CCC. CSOs/NGOs: PMPI, Center for Environmental Concerns, Greenpeace, Haribon Foundation."
+ },
+ {
+  "ch": "Module 2.7 — Agents, SDGs 8, 9 & 17 · Security",
+  "q": "Threats to human security come in which forms?",
+  "o": [
+   "Invasions, rebellions, and terrorism",
+   "Hazards, exposure, and vulnerability",
+   "Local, national, and global",
+   "Shocks, trends, and seasonalities"
+  ],
+  "a": 3,
+  "fb": "Shocks, trends, and seasonalities, across the political, economic, social, environmental, technological, and health spheres."
+ },
+ {
+  "ch": "Module 2.7 — Agents, SDGs 8, 9 & 17 · Security",
+  "q": "The film Poverty Inc. prompted which discussion question?",
+  "o": [
+   "Is economic growth the only measure of development?",
+   "Can international aid also become a threat to national and human security?",
+   "Should the Philippines leave the UN?",
+   "Is renewable energy always good for the environment?"
+  ],
+  "a": 1,
+  "fb": "The discussion asked whether international aid can become a threat to national and human security, e.g. by creating dependency or undercutting local producers."
+ }
+];
+
+      const TOTAL = Q.length;
+      const MODS = [...new Set(Q.map((q) => q.ch))];
+      const state = Q.map(() => null); // null | true | false
+      let view = "all";
+
+      function inView(i) { return view === "all" || Q[i].ch === view; }
+      function idxInView() { return Q.map((_, i) => i).filter(inView); }
+
+      function toggleSession(hd) {
+        const body = hd.nextElementSibling;
+        body.classList.toggle("open");
+        hd.querySelector(".tag").textContent = body.classList.contains("open") ? "－" : "＋";
+      }
+
+      function buildNav() {
+        const n = document.getElementById("nav");
+        const nb = document.createElement("button");
+        nb.textContent = "Notes";
+        nb.onclick = () => setView("notes", nb);
+        n.appendChild(nb);
+        const mk = (label, key) => {
+          const b = document.createElement("button");
+          b.textContent = label;
+          b.onclick = () => setView(key, b);
+          if (key === view) b.classList.add("active");
+          n.appendChild(b);
+        };
+        mk(`All · ${TOTAL}`, "all");
+        MODS.forEach((m) => {
+          const count = Q.filter((q) => q.ch === m).length;
+          mk(`${m.split("—")[0].trim().replace("Module ", "M")} · ${count}`, m);
+        });
+      }
+
+      function setView(key, btn) {
+        view = key;
+        document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const notes = key === "notes";
+        document.getElementById("notes-panel").style.display = notes ? "block" : "none";
+        document.getElementById("quiz-panel").style.display = notes ? "none" : "block";
+        document.getElementById("score-banner").style.display = notes ? "none" : "flex";
+        if (notes) { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+        buildExam();
+        upd();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function buildExam() {
+        const w = document.getElementById("ex-wrap");
+        w.innerHTML = "";
+        const ids = idxInView();
+        document.getElementById("view-title").textContent = view === "all" ? "All Modules" : view.split("—")[0].trim();
+        document.getElementById("view-sub").textContent =
+          (view === "all" ? "" : view.split("—")[1].trim() + " | ") + `${ids.length} items | Multiple choice`;
+        let lc = "";
+        ids.forEach((i, k) => {
+          const q = Q[i];
+          if (q.ch !== lc) {
+            const d = document.createElement("div");
+            d.className = "ch-divider" + (lc === "" ? " first" : "");
+            d.textContent = q.ch;
+            w.appendChild(d);
+            lc = q.ch;
+          }
+          const c = document.createElement("div");
+          c.className = "q-card";
+          c.id = `qc${i}`;
+          c.innerHTML = `<div class="q-num"><span>Question ${k + 1} of ${ids.length}</span><span class="mark" id="qd${i}"></span></div>
+            <div class="q-text">${q.q}</div>
+            <div class="options" id="qo${i}">
+              ${q.o.map((o, j) => `<button class="option-btn" onclick="answer(${i},${j})">${"ABCD"[j]}. ${o}</button>`).join("")}
+            </div>
+            <div class="feedback" id="qf${i}"></div>`;
+          w.appendChild(c);
+          if (state[i] !== null) paint(i, state[i] ? q.a : q._pick);
+        });
+      }
+
+      function paint(i, s) {
+        const q = Q[i], c = document.getElementById(`qc${i}`), fb = document.getElementById(`qf${i}`), dl = document.getElementById(`qd${i}`);
+        document.querySelectorAll(`#qo${i} .option-btn`).forEach((b, j) => {
+          b.disabled = true;
+          if (j === q.a) b.classList.add("correct");
+          if (j === s && s !== q.a) b.classList.add("wrong");
+        });
+        fb.classList.add("show");
+        if (s === q.a) {
+          c.classList.add("answered-ok");
+          dl.textContent = "✓ Correct"; dl.className = "mark ok";
+          fb.textContent = "✓ Correct. " + q.fb;
+        } else {
+          c.classList.add("answered-bad");
+          dl.textContent = "✗ Wrong"; dl.className = "mark bad";
+          fb.textContent = "✗ Incorrect. The answer is " + "ABCD"[q.a] + ". " + q.fb;
+        }
+      }
+
+      function answer(i, s) {
+        if (state[i] !== null) return;
+        state[i] = s === Q[i].a;
+        Q[i]._pick = s;
+        paint(i, s);
+        upd();
+      }
+
+      function upd() {
+        const ids = idxInView();
+        const right = ids.filter((i) => state[i] === true).length;
+        const wrong = ids.filter((i) => state[i] === false).length;
+        const done = right + wrong;
+        document.getElementById("s-right").textContent = right;
+        document.getElementById("s-wrong").textContent = wrong;
+        document.getElementById("s-done").textContent = done;
+        document.getElementById("s-total").textContent = ids.length;
+        document.getElementById("ex-score-txt").textContent = `${right} / ${ids.length}`;
+        document.getElementById("ex-prog").style.width = (done / ids.length) * 100 + "%";
+        const box = document.getElementById("ex-result");
+        if (done === ids.length) showResult(ids, right, wrong); else box.classList.remove("show");
+      }
+
+      function showResult(ids, right, wrong) {
+        const pct = Math.round((right / ids.length) * 100);
+        document.getElementById("ex-big").textContent = `${right} / ${ids.length}`;
+        document.getElementById("ex-breakdown").textContent = `${right} correct | ${wrong} wrong | ${pct}%`;
+        const by = {};
+        ids.forEach((i) => {
+          const k = Q[i].ch;
+          if (!by[k]) by[k] = { n: 0, ok: 0 };
+          by[k].n++;
+          if (state[i]) by[k].ok++;
+        });
+        document.getElementById("ex-chapters").innerHTML = Object.keys(by)
+          .map((k) => `${k.split("—")[0].trim()}: ${by[k].ok}/${by[k].n} correct`)
+          .join("<br/>");
+        document.getElementById("ex-msg").textContent =
+          pct >= 90 ? "Excellent. You're ready for the quiz."
+          : pct >= 75 ? "Good. Retry the items you missed and review those slides."
+          : pct >= 60 ? "Passing. Focus on the modules with the lowest scores above."
+          : "Go back to the slides for the weaker modules, then retry the missed items.";
+        document.getElementById("ex-result").classList.add("show");
+      }
+
+      function retryMissed() {
+        idxInView().forEach((i) => { if (state[i] === false) state[i] = null; });
+        buildExam(); upd();
+        const first = idxInView().find((i) => state[i] === null);
+        if (first !== undefined) document.getElementById(`qc${first}`).scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      function resetExam() {
+        idxInView().forEach((i) => (state[i] = null));
+        buildExam(); upd();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      buildNav();
+      buildExam();
+      upd();
+      document.querySelector("nav button").click();
+    </script>
+  </body>
+</html>
